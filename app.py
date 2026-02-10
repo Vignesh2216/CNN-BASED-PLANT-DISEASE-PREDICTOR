@@ -117,7 +117,7 @@ def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
 st.markdown(
     """
     <h1 style='text-align: center; color: #2E8B57;'>
-        🌿 Crop Disease Detection System
+        Crop Disease Detection System
     </h1>
     <p style='text-align: center;'>
         Upload a leaf image to detect disease and get treatment advice.
@@ -136,18 +136,21 @@ if uploaded_file:
     img = Image.open(uploaded_file).convert("RGB")
     st.image(img, caption="Uploaded Leaf", use_container_width=True)
 
+    # Preprocess
     img_resized = img.resize((128,128))
     img_array = np.array(img_resized) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
+    # Prediction
     prediction = model.predict(img_array)
     predicted_class = np.argmax(prediction)
-    confidence = np.max(prediction) * 100
+    confidence = float(np.max(prediction) * 100)
     disease = class_labels[predicted_class]
 
     info = disease_info.get(disease, default_remedy)
 
-    st.markdown("## 🔍 Prediction Result")
+    # ---------------- RESULT SECTION ----------------
+    st.markdown("## Prediction Result")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -155,14 +158,14 @@ if uploaded_file:
     with col2:
         st.metric("Confidence", f"{confidence:.2f}%")
 
-    st.markdown("### 🩺 Disease Description")
+    st.markdown("### Disease Description")
     st.info(info["desc"])
 
-    st.markdown("### 🌱 Recommended Remedy")
+    st.markdown("### Recommended Remedy")
     st.success(info["remedy"])
 
     # ---------------- CHART ----------------
-    st.markdown("### 📊 Prediction Confidence")
+    st.markdown("### Prediction Confidence")
 
     probs = prediction[0]
     top_indices = probs.argsort()[-3:][::-1]
@@ -182,7 +185,7 @@ if uploaded_file:
     st.pyplot(fig)
 
     # ---------------- DOWNLOAD SECTION ----------------
-    st.markdown("## 📥 Download Report")
+    st.markdown("## Download PDF")
 
     # Generate PDF
     pdf_path = generate_pdf(
@@ -196,10 +199,10 @@ if uploaded_file:
 
     # Generate JSON
     report_data = {
-        "disease": disease,
-        "confidence": round(confidence, 2),
-        "description": info["desc"],
-        "remedy": info["remedy"]
+        "disease": str(disease),
+        "confidence": float(round(confidence, 2)),
+        "description": str(info["desc"]),
+        "remedy": str(info["remedy"])
     }
     json_data = json.dumps(report_data, indent=4)
 
@@ -208,7 +211,7 @@ if uploaded_file:
     with col1:
         with open(pdf_path, "rb") as f:
             st.download_button(
-                label="📄 Download PDF",
+                label="Download PDF",
                 data=f,
                 file_name="crop_diagnosis_report.pdf",
                 mime="application/pdf"
@@ -216,7 +219,7 @@ if uploaded_file:
 
     with col2:
         st.download_button(
-            label="🧾 Download JSON",
+            label="Download JSON",
             data=json_data,
             file_name="crop_diagnosis_report.json",
             mime="application/json"
