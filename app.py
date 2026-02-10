@@ -6,6 +6,12 @@ import gdown
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import tempfile
+
+# PDF libraries
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Crop Disease Detector", layout="centered")
@@ -61,11 +67,56 @@ disease_info = {
     }
 }
 
-# Default remedy
 default_remedy = {
     "desc": "Disease detected in plant.",
     "remedy": "Remove infected parts and apply appropriate fungicide or pesticide."
 }
+
+# ---------------- PDF GENERATION FUNCTION ----------------
+def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    pdf_path = temp_file.name
+
+    doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # Title
+    elements.append(Paragraph("Crop Disease Diagnosis Report", styles['Title']))
+    elements.append(Spacer(1, 10))
+
+    # Save image temporarily
+    img_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    image.save(img_temp.name)
+
+    # Add leaf image
+    elements.append(Paragraph("<b>Uploaded Leaf Image:</b>", styles['Heading2']))
+    elements.append(RLImage(img_temp.name, width=200, height=200))
+    elements.append(Spacer(1, 10))
+
+    # Disease details
+    elements.append(Paragraph(f"<b>Disease:</b> {disease}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Confidence:</b> {confidence:.2f}%", styles['Normal']))
+    elements.append(Spacer(1, 10))
+
+    elements.append(Paragraph("<b>Description:</b>", styles['Heading2']))
+    elements.append(Paragraph(description, styles['Normal']))
+    elements.append(Spacer(1, 10))
+
+    elements.append(Paragraph("<b>Recommended Remedy:</b>", styles['Heading2']))
+    elements.append(Paragraph(remedy, styles['Normal']))
+    elements.append(Spacer(1, 15))
+
+    # Save chart image
+    chart_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    chart_fig.savefig(chart_temp.name, bbox_inches='tight')
+
+    # Add chart to PDF
+    elements.append(Paragraph("<b>Prediction Confidence Chart:</b>", styles['Heading2']))
+    elements.append(RLImage(chart_temp.name, width=400, height=250))
+
+    doc.build(elements)
+    return pdf_path
 
 # ---------------- UI HEADER ----------------
 st.markdown(
@@ -90,7 +141,7 @@ if uploaded_file:
     img = Image.open(uploaded_file).convert("RGB")
     st.image(img, caption="Uploaded Leaf", use_container_width=True)
 
-    # Preprocess image
+    # Preprocess
     img_resized = img.resize((128,128))
     img_array = np.array(img_resized) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
@@ -101,7 +152,6 @@ if uploaded_file:
     confidence = np.max(prediction) * 100
     disease = class_labels[predicted_class]
 
-    # Get remedy
     info = disease_info.get(disease, default_remedy)
 
     # ---------------- RESULT SECTION ----------------
@@ -121,7 +171,7 @@ if uploaded_file:
     st.markdown("### 🌱 Recommended Remedy")
     st.success(info["remedy"])
 
-    # ---------------- GRAPHICAL REPRESENTATION ----------------
+    # ---------------- CHART ----------------
     st.markdown("### 📊 Prediction Confidence")
 
     probs = prediction[0]
@@ -142,3 +192,21 @@ if uploaded_file:
     plt.xticks(rotation=20)
 
     st.pyplot(fig)
+
+    # ---------------- PDF DOWNLOAD ----------------
+    pdf_path = generate_pdf(
+        img,
+        disease,
+        confidence,
+        info["desc"],
+        info["remedy"],
+        fig
+    )
+
+    with open(pdf_path, "rb") as f:
+        st.download_button(
+            label="📄 Download Diagnosis Report",
+            data=f,
+            file_name="crop_diagnosis_report.pdf",
+            mime="application/pdf"
+        )
