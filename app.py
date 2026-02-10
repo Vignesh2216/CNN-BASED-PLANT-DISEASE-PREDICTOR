@@ -48,7 +48,7 @@ class_labels = {
     14: "Tomato Healthy"
 }
 
-# ---------------- DETAILED DISEASE INFO ----------------
+# ---------------- DISEASE INFO (3+ lines each) ----------------
 disease_info = {
     "Pepper Bacterial Spot": {
         "desc": "This bacterial disease causes small, water-soaked lesions on leaves and fruit. Over time, the spots turn brown and necrotic, leading to leaf drop. It spreads rapidly in warm and humid weather conditions.",
@@ -116,7 +116,6 @@ disease_info = {
 def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
     pdf_path = temp_file.name
-
     doc = SimpleDocTemplate(pdf_path, pagesize=letter)
     styles = getSampleStyleSheet()
     elements = []
@@ -126,7 +125,6 @@ def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
 
     img_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     image.save(img_temp.name)
-
     elements.append(RLImage(img_temp.name, width=200, height=200))
     elements.append(Spacer(1, 10))
 
@@ -167,13 +165,22 @@ if uploaded_file:
     disease = class_labels[predicted_class]
     info = disease_info[disease]
 
-    st.metric("Detected Disease", disease)
-    st.metric("Confidence", f"{confidence:.2f}%")
+    # Headers restored
+    st.markdown("## Prediction Result")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Detected Disease", disease)
+    with col2:
+        st.metric("Confidence", f"{confidence:.2f}%")
 
+    st.markdown("### Disease Description")
     st.info(info["desc"])
+
+    st.markdown("### Recommended Remedy")
     st.success(info["remedy"])
 
     # Chart
+    st.markdown("### Prediction Confidence")
     probs = prediction[0]
     top_indices = probs.argsort()[-3:][::-1]
     top_labels = [class_labels[i] for i in top_indices]
@@ -181,6 +188,8 @@ if uploaded_file:
 
     fig, ax = plt.subplots()
     ax.bar(top_labels, top_values)
+    ax.set_ylabel("Confidence (%)")
+    ax.set_title("Top 3 Predictions")
     st.pyplot(fig)
 
     # Downloads
