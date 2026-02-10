@@ -48,32 +48,71 @@ class_labels = {
     14: "Tomato Healthy"
 }
 
-# ---------------- DISEASE INFO ----------------
+# ---------------- DETAILED DISEASE INFO ----------------
 disease_info = {
-    "Tomato Target Spot": {
-        "desc": "Fungal disease causing brown spots with concentric rings.",
-        "remedy": "Use fungicides and remove infected leaves. Improve air circulation."
+    "Pepper Bacterial Spot": {
+        "desc": "This bacterial disease causes small, water-soaked lesions on leaves and fruit. Over time, the spots turn brown and necrotic, leading to leaf drop. It spreads rapidly in warm and humid weather conditions.",
+        "remedy": "Remove and destroy infected leaves immediately to reduce spread. Avoid overhead irrigation and keep foliage dry. Apply copper-based bactericides as recommended."
+    },
+    "Pepper Healthy": {
+        "desc": "The pepper plant shows no visible signs of disease or pest infestation. Leaves are uniformly green with proper growth. The plant is in a healthy and stable condition.",
+        "remedy": "Maintain proper watering and fertilization schedules. Ensure adequate sunlight and spacing between plants. Continue regular inspection for early disease detection."
+    },
+    "Potato Early Blight": {
+        "desc": "Early blight causes dark brown spots with concentric rings on older leaves. The disease usually begins at the lower part of the plant. It can reduce photosynthesis and yield if untreated.",
+        "remedy": "Remove affected leaves and dispose of them properly. Apply recommended fungicides at early stages. Practice crop rotation to prevent recurrence."
+    },
+    "Potato Late Blight": {
+        "desc": "Late blight is a severe fungal disease causing water-soaked lesions on leaves and stems. It spreads rapidly in cool, moist conditions. If untreated, it can destroy entire crops.",
+        "remedy": "Use certified disease-free seed potatoes. Apply copper-based fungicides at the first sign of infection. Avoid excessive irrigation and maintain proper spacing."
+    },
+    "Potato Healthy": {
+        "desc": "The potato plant appears healthy with strong green foliage. There are no visible lesions or signs of infection. Growth and leaf structure look normal.",
+        "remedy": "Continue balanced fertilization and irrigation. Monitor regularly for early signs of pests or diseases. Maintain good field sanitation practices."
+    },
+    "Tomato Bacterial Spot": {
+        "desc": "This disease causes small, dark, water-soaked spots on leaves and fruits. Over time, the spots enlarge and cause defoliation. It reduces fruit quality and yield.",
+        "remedy": "Remove infected plants and avoid handling wet foliage. Use copper-based sprays as recommended. Ensure proper spacing for air circulation."
     },
     "Tomato Early Blight": {
-        "desc": "Causes dark spots with concentric rings on older leaves.",
-        "remedy": "Apply fungicide and remove affected leaves."
+        "desc": "Early blight produces dark spots with concentric rings on older leaves. It usually starts near the base of the plant. If untreated, it can spread upward and cause severe defoliation.",
+        "remedy": "Apply fungicide at early stages of the disease. Remove infected leaves to limit spread. Practice crop rotation and avoid overhead watering."
     },
     "Tomato Late Blight": {
-        "desc": "Serious fungal disease causing dark lesions on leaves and fruit.",
-        "remedy": "Use copper-based fungicides and avoid overhead watering."
+        "desc": "Late blight causes dark, greasy lesions on leaves and fruit. It spreads quickly during cool and moist weather. The disease can destroy entire fields within days.",
+        "remedy": "Use copper-based fungicides as soon as symptoms appear. Remove infected plants immediately. Avoid excessive moisture and ensure good drainage."
+    },
+    "Tomato Leaf Mold": {
+        "desc": "Leaf mold appears as yellow patches on the upper leaf surface. A greenish mold develops underneath the leaves. It thrives in humid and poorly ventilated environments.",
+        "remedy": "Improve air circulation around plants. Reduce humidity by spacing plants properly. Apply fungicides when symptoms first appear."
+    },
+    "Tomato Septoria Leaf Spot": {
+        "desc": "This disease causes small circular spots with dark borders on leaves. It usually begins on lower leaves and spreads upward. Severe infection leads to defoliation.",
+        "remedy": "Remove infected leaves promptly. Apply recommended fungicides. Avoid overhead watering and improve air circulation."
+    },
+    "Tomato Spider Mites": {
+        "desc": "Spider mites are tiny pests that cause yellow speckling on leaves. Leaves may dry, curl, and eventually drop. Infestation spreads quickly in hot, dry conditions.",
+        "remedy": "Spray plants with water to remove mites. Use insecticidal soap or neem oil. Maintain proper humidity to discourage mites."
+    },
+    "Tomato Target Spot": {
+        "desc": "Target spot causes circular brown lesions with concentric rings. It typically appears on leaves and stems. Severe cases can cause defoliation and fruit damage.",
+        "remedy": "Remove infected leaves immediately. Apply recommended fungicides. Improve air circulation and avoid excessive moisture."
+    },
+    "Tomato Yellow Leaf Curl Virus": {
+        "desc": "This viral disease causes yellowing and upward curling of leaves. Plants become stunted and produce fewer fruits. It spreads through whiteflies.",
+        "remedy": "Control whitefly populations using insecticides or traps. Remove infected plants to prevent spread. Use resistant plant varieties if available."
+    },
+    "Tomato Mosaic Virus": {
+        "desc": "Mosaic virus causes mottled patterns of light and dark green on leaves. It leads to distorted growth and reduced fruit yield. The virus spreads through contact.",
+        "remedy": "Remove infected plants immediately. Disinfect tools and hands after handling plants. Avoid using contaminated soil or seeds."
     },
     "Tomato Healthy": {
-        "desc": "The plant appears healthy with no visible disease.",
-        "remedy": "Maintain proper watering, sunlight, and nutrition."
+        "desc": "The tomato plant appears healthy with vibrant green leaves. There are no visible signs of disease or pest damage. Growth is uniform and stable.",
+        "remedy": "Maintain regular watering and fertilization schedules. Ensure proper sunlight and spacing. Continue periodic inspection for early detection."
     }
 }
 
-default_remedy = {
-    "desc": "Disease detected in plant.",
-    "remedy": "Remove infected parts and apply appropriate fungicide or pesticide."
-}
-
-# ---------------- PDF GENERATION FUNCTION ----------------
+# ---------------- PDF FUNCTION ----------------
 def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
     pdf_path = temp_file.name
@@ -88,7 +127,6 @@ def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
     img_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     image.save(img_temp.name)
 
-    elements.append(Paragraph("<b>Uploaded Leaf Image:</b>", styles['Heading2']))
     elements.append(RLImage(img_temp.name, width=200, height=200))
     elements.append(Spacer(1, 10))
 
@@ -106,121 +144,60 @@ def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
 
     chart_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     chart_fig.savefig(chart_temp.name, bbox_inches='tight')
-
-    elements.append(Paragraph("<b>Prediction Confidence Chart:</b>", styles['Heading2']))
     elements.append(RLImage(chart_temp.name, width=400, height=250))
 
     doc.build(elements)
     return pdf_path
 
-# ---------------- UI HEADER ----------------
-st.markdown(
-    """
-    <h1 style='text-align: center; color: #2E8B57;'>
-        Crop Disease Detection System
-    </h1>
-    <p style='text-align: center;'>
-        Upload a leaf image to detect disease and get treatment advice.
-    </p>
-    """,
-    unsafe_allow_html=True
-)
-
-# ---------------- FILE UPLOAD ----------------
-uploaded_file = st.file_uploader(
-    "Upload a leaf image",
-    type=["jpg", "jpeg", "png"]
-)
+# ---------------- UI ----------------
+st.markdown("<h1 style='text-align: center;'>Crop Disease Detection System</h1>", unsafe_allow_html=True)
+uploaded_file = st.file_uploader("Upload a leaf image", type=["jpg","jpeg","png"])
 
 if uploaded_file:
     img = Image.open(uploaded_file).convert("RGB")
-    st.image(img, caption="Uploaded Leaf", use_container_width=True)
+    st.image(img, use_container_width=True)
 
-    # Preprocess
     img_resized = img.resize((128,128))
-    img_array = np.array(img_resized) / 255.0
+    img_array = np.array(img_resized)/255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    # Prediction
     prediction = model.predict(img_array)
     predicted_class = np.argmax(prediction)
     confidence = float(np.max(prediction) * 100)
     disease = class_labels[predicted_class]
+    info = disease_info[disease]
 
-    info = disease_info.get(disease, default_remedy)
+    st.metric("Detected Disease", disease)
+    st.metric("Confidence", f"{confidence:.2f}%")
 
-    # ---------------- RESULT SECTION ----------------
-    st.markdown("## Prediction Result")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Detected Disease", disease)
-    with col2:
-        st.metric("Confidence", f"{confidence:.2f}%")
-
-    st.markdown("### Disease Description")
     st.info(info["desc"])
-
-    st.markdown("### Recommended Remedy")
     st.success(info["remedy"])
 
-    # ---------------- CHART ----------------
-    st.markdown("### Prediction Confidence")
-
+    # Chart
     probs = prediction[0]
     top_indices = probs.argsort()[-3:][::-1]
     top_labels = [class_labels[i] for i in top_indices]
-    top_values = [probs[i] * 100 for i in top_indices]
-
-    chart_data = pd.DataFrame({
-        "Disease": top_labels,
-        "Confidence (%)": top_values
-    })
+    top_values = [probs[i]*100 for i in top_indices]
 
     fig, ax = plt.subplots()
-    ax.bar(chart_data["Disease"], chart_data["Confidence (%)"])
-    ax.set_ylabel("Confidence (%)")
-    ax.set_title("Top 3 Predictions")
-    plt.xticks(rotation=20)
+    ax.bar(top_labels, top_values)
     st.pyplot(fig)
 
-    # ---------------- DOWNLOAD SECTION ----------------
+    # Downloads
     st.markdown("## Download PDF")
+    pdf_path = generate_pdf(img, disease, confidence, info["desc"], info["remedy"], fig)
 
-    # Generate PDF
-    pdf_path = generate_pdf(
-        img,
-        disease,
-        confidence,
-        info["desc"],
-        info["remedy"],
-        fig
-    )
-
-    # Generate JSON
     report_data = {
-        "disease": str(disease),
-        "confidence": float(round(confidence, 2)),
-        "description": str(info["desc"]),
-        "remedy": str(info["remedy"])
+        "disease": disease,
+        "confidence": round(confidence,2),
+        "description": info["desc"],
+        "remedy": info["remedy"]
     }
     json_data = json.dumps(report_data, indent=4)
 
     col1, col2 = st.columns(2)
-
     with col1:
-        with open(pdf_path, "rb") as f:
-            st.download_button(
-                label="Download PDF",
-                data=f,
-                file_name="crop_diagnosis_report.pdf",
-                mime="application/pdf"
-            )
-
+        with open(pdf_path,"rb") as f:
+            st.download_button("Download PDF", f, "report.pdf")
     with col2:
-        st.download_button(
-            label="Download JSON",
-            data=json_data,
-            file_name="crop_diagnosis_report.json",
-            mime="application/json"
-        )
+        st.download_button("Download JSON", json_data, "report.json")
