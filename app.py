@@ -7,6 +7,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import tempfile
+import json
 
 # PDF libraries
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
@@ -81,20 +82,16 @@ def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
     styles = getSampleStyleSheet()
     elements = []
 
-    # Title
     elements.append(Paragraph("Crop Disease Diagnosis Report", styles['Title']))
     elements.append(Spacer(1, 10))
 
-    # Save image temporarily
     img_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     image.save(img_temp.name)
 
-    # Add leaf image
     elements.append(Paragraph("<b>Uploaded Leaf Image:</b>", styles['Heading2']))
     elements.append(RLImage(img_temp.name, width=200, height=200))
     elements.append(Spacer(1, 10))
 
-    # Disease details
     elements.append(Paragraph(f"<b>Disease:</b> {disease}", styles['Normal']))
     elements.append(Paragraph(f"<b>Confidence:</b> {confidence:.2f}%", styles['Normal']))
     elements.append(Spacer(1, 10))
@@ -107,11 +104,9 @@ def generate_pdf(image, disease, confidence, description, remedy, chart_fig):
     elements.append(Paragraph(remedy, styles['Normal']))
     elements.append(Spacer(1, 15))
 
-    # Save chart image
     chart_temp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
     chart_fig.savefig(chart_temp.name, bbox_inches='tight')
 
-    # Add chart to PDF
     elements.append(Paragraph("<b>Prediction Confidence Chart:</b>", styles['Heading2']))
     elements.append(RLImage(chart_temp.name, width=400, height=250))
 
@@ -141,12 +136,10 @@ if uploaded_file:
     img = Image.open(uploaded_file).convert("RGB")
     st.image(img, caption="Uploaded Leaf", use_container_width=True)
 
-    # Preprocess
     img_resized = img.resize((128,128))
     img_array = np.array(img_resized) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    # Prediction
     prediction = model.predict(img_array)
     predicted_class = np.argmax(prediction)
     confidence = np.max(prediction) * 100
@@ -154,16 +147,13 @@ if uploaded_file:
 
     info = disease_info.get(disease, default_remedy)
 
-    # ---------------- RESULT SECTION ----------------
     st.markdown("## 🔍 Prediction Result")
 
     col1, col2 = st.columns(2)
-
     with col1:
-        st.metric(label="Detected Disease", value=disease)
-
+        st.metric("Detected Disease", disease)
     with col2:
-        st.metric(label="Confidence", value=f"{confidence:.2f}%")
+        st.metric("Confidence", f"{confidence:.2f}%")
 
     st.markdown("### 🩺 Disease Description")
     st.info(info["desc"])
@@ -176,7 +166,6 @@ if uploaded_file:
 
     probs = prediction[0]
     top_indices = probs.argsort()[-3:][::-1]
-
     top_labels = [class_labels[i] for i in top_indices]
     top_values = [probs[i] * 100 for i in top_indices]
 
@@ -190,10 +179,12 @@ if uploaded_file:
     ax.set_ylabel("Confidence (%)")
     ax.set_title("Top 3 Predictions")
     plt.xticks(rotation=20)
-
     st.pyplot(fig)
 
-    # ---------------- PDF DOWNLOAD ----------------
+    # ---------------- DOWNLOAD SECTION ----------------
+    st.markdown("## 📥 Download Report")
+
+    # Generate PDF
     pdf_path = generate_pdf(
         img,
         disease,
@@ -203,10 +194,30 @@ if uploaded_file:
         fig
     )
 
-    with open(pdf_path, "rb") as f:
+    # Generate JSON
+    report_data = {
+        "disease": disease,
+        "confidence": round(confidence, 2),
+        "description": info["desc"],
+        "remedy": info["remedy"]
+    }
+    json_data = json.dumps(report_data, indent=4)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        with open(pdf_path, "rb") as f:
+            st.download_button(
+                label="📄 Download PDF",
+                data=f,
+                file_name="crop_diagnosis_report.pdf",
+                mime="application/pdf"
+            )
+
+    with col2:
         st.download_button(
-            label="📄 Download Diagnosis Report",
-            data=f,
-            file_name="crop_diagnosis_report.pdf",
-            mime="application/pdf"
+            label="🧾 Download JSON",
+            data=json_data,
+            file_name="crop_diagnosis_report.json",
+            mime="application/json"
         )
