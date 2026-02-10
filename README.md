@@ -72,14 +72,6 @@ https://cnn-based-crop-disease-predictor-vay.streamlit.app/
 
 ---
 
-## 📁 Project Structure
-crop-disease-app/
-│
-├── app.py
-├── requirements.txt
-└── README.md
-
----
 
 ## 🧪 How to Run Locally
 
