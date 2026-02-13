@@ -1,6 +1,6 @@
-# 🌿 Crop Disease Detection System
+# 🌿 Plant Disease Detection System
 
-An AI-powered web application that detects crop diseases from leaf images using a Convolutional Neural Network (CNN).  
+An AI-powered web application that detects plant diseases from leaf images using a Convolutional Neural Network (CNN).  
 The system provides disease predictions, confidence scores, severity levels, and recommended remedies.  
 It also allows users to download reports in **PDF** and **JSON** formats.
 
@@ -132,7 +132,7 @@ Severity is calculated based on prediction confidence:
 ---
 
 ## 🌱 Real-World Applications
-- Early crop disease detection
+- Early plant disease detection
 - Smart agriculture solutions
 - Farmer assistance tools
 - Agricultural advisory systems
