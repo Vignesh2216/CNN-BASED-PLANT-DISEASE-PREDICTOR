@@ -9,7 +9,7 @@ It also allows users to download reports in **PDF** and **JSON** formats.
 ## 🚀 Live Demo
 
 
-https://cnn-based-crop-disease-predictor-vay.streamlit.app/
+https://cnn-based-plant-disease-predictor-vay.streamlit.app/
 
 ---
 
